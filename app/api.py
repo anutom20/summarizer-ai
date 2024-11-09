@@ -13,6 +13,3 @@ def read_root():
 
 app.include_router(reddit_router, prefix="/api")
 app.include_router(stackoverflow_router, prefix="/api")
-
-if __name__ == "__main__":
-    uvicorn.run(app)
