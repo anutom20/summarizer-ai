@@ -6,6 +6,7 @@ from app.config import (
     REDDIT_TOP_LEVEL_COMMENTS_LIMIT,
 )
 from fuzzywuzzy import fuzz
+from urllib.parse import urlparse
 
 
 async def extract_comments_from_single_post(post_url: str):
@@ -40,7 +41,8 @@ def get_fuzzy_matches(query, data, threshold=50):
     for item in data:
         title = item["title"]
         score = fuzz.partial_ratio(query.lower(), title.lower())
-        if score >= threshold:
+        parsed_url = urlparse(item["url"])
+        if score >= threshold and "reddit.com" in parsed_url.netloc:
             matches.append((item, score))
 
     matches.sort(key=lambda x: x[1], reverse=True)
