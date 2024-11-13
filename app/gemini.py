@@ -7,22 +7,19 @@ import google.generativeai as genai
 import markdown
 
 
-async def generate_summary(gemini_prompt: GeminiPrompt):
+def generate_summary(gemini_prompt: GeminiPrompt):
     genai.configure(api_key=GEMINI_API_KEY)
     # The Gemini 1.5 models are versatile and work with both text-only and multimodal prompts
     model = genai.GenerativeModel("gemini-1.5-flash")
-    response = model.generate_content(gemini_prompt.question)
-    logger.info(f"{response=}")
-    logger.success(response.text)
-    html_content = markdown.markdown(response.text)
-    html_content = html_content.replace('\n\n' , '<br/>')
-    html_content = html_content.replace('\n' , '')
+    response = model.generate_content(gemini_prompt.question, stream=True)
 
-    return {"answer": html_content}
+    for chunk in response:
+        logger.success(f"{chunk.text}")
+        yield chunk.text
 
 
-def get_reddit_summary_prompt_single_post(reddit_comments: List , post_title : str):
-    
+def get_reddit_summary_prompt_single_post(reddit_comments: List, post_title: str):
+
     profanity.load_censor_words()
 
     censored_reddit_comments = profanity.censor(f"{reddit_comments}")
@@ -51,8 +48,9 @@ def get_reddit_summary_prompt_single_post(reddit_comments: List , post_title : s
 
     return reddit_prompt
 
-def get_stack_exchange_prompt_single_question(answers : List , comments : List):
-    
+
+def get_stack_exchange_prompt_single_question(answers: List, comments: List):
+
     stack_exchange_prompt = f"""
     stack_exchange_answers : {answers}
     comments : {comments}
@@ -72,4 +70,3 @@ def get_stack_exchange_prompt_single_question(answers : List , comments : List):
     """
 
     return stack_exchange_prompt
-

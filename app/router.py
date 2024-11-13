@@ -4,7 +4,7 @@ from loguru import logger
 from app.common import GeminiPrompt
 from app.utils import extract_comments_from_single_post
 import asyncio
-from app.gemini import generate_summary , get_reddit_summary_prompt_single_post
+from app.gemini import generate_summary, get_reddit_summary_prompt_single_post
 from app.config import REDDIT_SEARCH_RESULTS_LIMIT
 
 
@@ -16,11 +16,16 @@ async def get_posts(question: str):
     try:
         all_subreddit = await reddit.subreddit("all")
 
-        posts_info = [post async for post in all_subreddit.search(question, limit=REDDIT_SEARCH_RESULTS_LIMIT)]
+        posts_info = [
+            post
+            async for post in all_subreddit.search(
+                question, limit=REDDIT_SEARCH_RESULTS_LIMIT
+            )
+        ]
 
         logger.debug(f"{posts_info=}")
 
-        return {"posts_info": posts_info , "total_count" : len(posts_info)}
+        return {"posts_info": posts_info, "total_count": len(posts_info)}
 
     except Exception as e:
         logger.error(f"An exception occured while getting posts={e}")
@@ -41,19 +46,23 @@ async def extract_comments(post_url: str):
 
 
 @router.get("/generate_summary_single_post")
-async def generate_summary_single_post(post_url : str):
+async def generate_summary_single_post(post_url: str):
     try:
         comments = await extract_comments_from_single_post(post_url=post_url)
 
-        prompt_string = get_reddit_summary_prompt_single_post(reddit_comments=comments['comments_output'] , post_title=comments['post_title'])
+        prompt_string = get_reddit_summary_prompt_single_post(
+            reddit_comments=comments["comments_output"],
+            post_title=comments["post_title"],
+        )
 
         geminiPrompt = GeminiPrompt(question=prompt_string)
 
-        llm_res = await generate_summary(geminiPrompt=geminiPrompt)
+        llm_res = generate_summary(geminiPrompt=geminiPrompt)
 
         return llm_res
 
     except Exception as e:
         logger.error(f"exception while generating summary = {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR , detail=f"{e}")
-
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}"
+        )
