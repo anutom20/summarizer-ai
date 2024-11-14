@@ -12,7 +12,7 @@ router = APIRouter(prefix="/reddit", tags=["Reddit"])
 
 
 @router.get("/get_posts_by_query")
-async def get_posts(question: str, keyphrase: str):
+async def get_posts(question: str, count: int = 10):
     try:
         all_subreddit = await reddit.subreddit("all")
 
@@ -23,9 +23,9 @@ async def get_posts(question: str, keyphrase: str):
             )
         ]
 
-        posts_info = get_fuzzy_matches(query=keyphrase, data=posts_info)
+        posts_info = get_fuzzy_matches(query=question, data=posts_info, threshold=40)
 
-        return {"posts": posts_info, "total_count": len(posts_info)}
+        return {"posts": posts_info[:count], "total_results_count": len(posts_info)}
 
     except Exception as e:
         logger.error(f"An exception occured while getting posts={e}")
